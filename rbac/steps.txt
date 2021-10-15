@@ -1,0 +1,15 @@
+1. openssl genrsa -out santiago.key 2048
+2. openssl req -new -key santiago.key -out santiago.csr -subj "/CN=santiago/O=dev"
+3. openssl x509 -req -in santiago.csr -CA /Users/<user>/.minikube/ca.crt -CAkey /Users/<user>/.minikube/ca.key -CAcreateserial -out santiago.crt -days 500
+
+/* Check created info */
+4. openssl x509 -in santiago.crt -noout -text
+
+/* Isolated env */
+docker run --rm -ti -v $PWD:/test -W /test -v /Users/<user>/.minikube/ca.crt:/ca.crt -v /usr/local/bin/kubectl:/usr/local/bin/kubectl alpine sh
+
+/* config kubectl for user */
+kubectl config set-cluster minikube --server=http://127.0.0.1:62654 --certificate-authority=/ca.crt
+kubectl config set-credentials santiago --client-certificate=santiago.crt --client-key=santiago.key
+kubectl config set-context santiago --cluster=minikube --user=santiago
+kubectl config use-context santiago
